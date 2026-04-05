@@ -1381,16 +1381,25 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModalDirect();
 });
 
-// ─── SELECT BUTTONS ───
+// ─── SELECT PLAN BUTTONS (SENDS EMAIL) ───
 document.querySelectorAll('.btn-select').forEach(btn => {
   btn.addEventListener('click', function() {
-    const original = this.textContent;
-    this.textContent = '✓ Selected!';
-    this.style.background = 'rgba(0,229,255,0.2)';
-    setTimeout(() => {
-      this.textContent = original;
-      this.style.background = '';
-    }, 2000);
+    const card = this.closest('.service-card');
+    const planTitle = card.querySelector('.service-title').innerText;
+    const planPrice = card.querySelector('.service-price').innerText;
+    
+    const subject = `ScriptAI Plan Request: ${planTitle}`;
+    const body = `Hi, I'm interested in the ${planTitle} plan for ${planPrice}. Please send me payment details to get started.`;
+    
+    window.location.href = `mailto:mariaajames280@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  });
+});
+
+// ─── FREE SAMPLE BUTTONS ───
+document.querySelectorAll('.footer-cta-btn, .btn-primary, .nav-cta, .hero-buttons .btn-primary').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    window.location.href = 'mailto:mariaajames280@gmail.com?subject=ScriptAI Free Sample Request&body=Hi, I would like to receive a free sample script. Please send me details.';
   });
 });
 </script>
