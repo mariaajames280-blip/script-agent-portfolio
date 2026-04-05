@@ -1394,7 +1394,33 @@ document.querySelectorAll('.btn-select').forEach(btn => {
     window.location.href = `mailto:mariaajames280@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   });
 });
+  // ─── SINGLE BUTTON SOLUTION ───
+document.querySelectorAll('.btn-select, .btn-primary, .footer-cta-btn, .nav-cta').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Find which plan they clicked (if any)
+    const card = this.closest('.service-card');
+    let planName = '';
+    if (card) {
+      planName = card.querySelector('.service-title').innerText;
+    }
+    
+    const subject = planName ? `ScriptAI Inquiry: ${planName}` : 'ScriptAI Service Inquiry';
+    const body = `Hi Maria,
 
+I'm interested in your script service${planName ? ` for ${planName}` : ''}.
+
+Can you tell me more about:
+- Free sample availability
+- 7-day trial options
+- Monthly pricing
+
+Thank you!`;
+    
+    window.location.href = `mailto:mariaajames280@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  });
+});
 // ─── FREE SAMPLE BUTTONS ───
 document.querySelectorAll('.footer-cta-btn, .btn-primary, .nav-cta, .hero-buttons .btn-primary').forEach(btn => {
   btn.addEventListener('click', function(e) {
