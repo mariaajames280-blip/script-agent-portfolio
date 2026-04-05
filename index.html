@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScriptAI — AI Scripts That Stop The Scroll</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0a0a1a;
+    --bg-secondary: #0d0d20;
+    --bg-card: rgba(255,255,255,0.04);
+    --cyan: #00e5ff;
+    --purple: #b000ff;
+    --gold: #ffd700;
+    --white: #ffffff;
+    --gray: #888888;
+    --gray-light: #aaaaaa;
+    --border: rgba(255,255,255,0.08);
+    --glow-cyan: 0 0 40px rgba(0,229,255,0.25);
+    --glow-purple: 0 0 40px rgba(176,0,255,0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  h1,h2,h3,h4 { font-family: 'Syne', sans-serif; letter-spacing: -0.02em; }
+
+  /* ─── CANVAS BACKGROUND ─── */
+  #particles-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(10,10,26,0.7);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--gray-light);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--cyan); }
+
+  .nav-cta {
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    color: var(--bg-primary) !important;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    text-decoration: none;
+    transition: opacity 0.3s, transform 0.2s !important;
+  }
+
+  .nav-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* ─── SECTIONS WRAPPER ─── */
+  section { position: relative; z-index: 1; }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+
+  /* ─── HERO ─── */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 40px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-gradient {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(176,0,255,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,229,255,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 20% 70%, rgba(176,0,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .hero-content { position: relative; z-index: 2; max-width: 860px; }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.25);
+    padding: 8px 18px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    color: var(--cyan);
+    font-weight: 500;
+    margin-bottom: 32px;
+    animation: fadeSlideDown 0.8s ease both;
+  }
+
+  .hero-badge span { display: inline-block; width: 6px; height: 6px; background: var(--cyan); border-radius: 50%; animation: pulse 1.5s infinite; }
+
+  .hero-h1 {
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 24px;
+    animation: fadeSlideDown 0.9s ease 0.1s both;
+  }
+
+  .hero-h1 .gradient-text {
+    background: linear-gradient(135deg, var(--cyan) 0%, var(--purple) 60%, #ff6b9d 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 1.2rem;
+    color: var(--gray-light);
+    max-width: 600px;
+    margin: 0 auto 40px;
+    font-weight: 300;
+    animation: fadeSlideDown 1s ease 0.2s both;
+  }
+
+  .hero-sub strong { color: var(--white); font-weight: 500; }
+
+  .hero-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeSlideDown 1s ease 0.3s both;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    color: var(--bg-primary);
+    padding: 16px 36px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+    transition: transform 0.2s, box-shadow 0.3s;
+    box-shadow: 0 0 30px rgba(0,229,255,0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 40px rgba(0,229,255,0.45);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--white);
+    padding: 15px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2);
+    text-decoration: none;
+    display: inline-block;
+    transition: border-color 0.3s, background 0.3s;
+  }
+
+  .btn-outline:hover {
+    border-color: var(--cyan);
+    background: rgba(0,229,255,0.06);
+  }
+
+  .trust-badges {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 60px;
+    flex-wrap: wrap;
+    animation: fadeSlideDown 1s ease 0.4s both;
+  }
+
+  .badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--gray-light);
+  }
+
+  .badge-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+
+  /* ─── SECTION HEADER ─── */
+  .section-header {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+
+  .section-tag {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 16px;
+  }
+
+  .section-h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .section-sub {
+    color: var(--gray);
+    font-size: 1rem;
+    max-width: 520px;
+    margin: 0 auto;
+    font-weight: 300;
+  }
+
+  /* ─── SERVICES ─── */
+  #services { padding: 100px 0; }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+
+  .service-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    backdrop-filter: blur(12px);
+    transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .service-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--cyan), var(--purple));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .service-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(0,229,255,0.3);
+    box-shadow: var(--glow-cyan);
+  }
+
+  .service-card:hover::before { opacity: 1; }
+
+  .service-icon {
+    font-size: 2.8rem;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .service-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 8px;
+  }
+
+  .service-price {
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-family: 'Syne', sans-serif;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 20px;
+  }
+
+  .service-price span { font-size: 0.9rem; font-weight: 400; color: var(--gray); -webkit-text-fill-color: var(--gray); }
+
+  .btn-select {
+    background: rgba(0,229,255,0.1);
+    color: var(--cyan);
+    border: 1px solid rgba(0,229,255,0.3);
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    width: 100%;
+  }
+
+  .btn-select:hover {
+    background: rgba(0,229,255,0.2);
+    transform: scale(1.02);
+  }
+
+  /* ─── PORTFOLIO ─── */
+  #portfolio { padding: 100px 0; background: linear-gradient(180deg, transparent, rgba(176,0,255,0.04), transparent); }
+
+  .portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+
+  .script-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+  }
+
+  .script-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--glow-purple);
+  }
+
+  .script-header {
+    padding: 24px 24px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .script-niche {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 50px;
+    background: rgba(176,0,255,0.15);
+    border: 1px solid rgba(176,0,255,0.3);
+    color: #cc66ff;
+  }
+
+  .viral-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 50px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,140,0,0.2));
+    border: 1px solid rgba(255,215,0,0.4);
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .script-body { padding: 16px 24px 24px; }
+
+  .script-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+
+  .script-preview {
+    color: var(--gray);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    font-style: italic;
+    border-left: 2px solid var(--purple);
+    padding-left: 14px;
+    margin-bottom: 20px;
+  }
+
+  .script-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--gray);
+  }
+
+  .btn-view {
+    background: transparent;
+    color: var(--cyan);
+    border: 1px solid rgba(0,229,255,0.3);
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .btn-view:hover { background: rgba(0,229,255,0.1); }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: #12122a;
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalIn 0.3s ease;
+  }
+
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+  .modal-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    color: var(--gray);
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+  }
+
+  .modal-close:hover { color: var(--white); }
+
+  .modal-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 24px;
+    line-height: 1.2;
+  }
+
+  .modal-script {
+    color: var(--gray-light);
+    font-size: 0.95rem;
+    line-height: 1.9;
+  }
+
+  .modal-script .hook {
+    color: var(--white);
+    font-weight: 500;
+    font-size: 1rem;
+    border-left: 3px solid var(--cyan);
+    padding-left: 16px;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  /* ─── HOW IT WORKS ─── */
+  #how-it-works { padding: 100px 0; }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    position: relative;
+  }
+
+  .steps-grid::before {
+    content: '';
+    position: absolute;
+    top: 40px;
+    left: calc(16.66% + 20px);
+    right: calc(16.66% + 20px);
+    height: 1px;
+    background: linear-gradient(90deg, var(--cyan), var(--purple));
+    opacity: 0.4;
+  }
+
+  .step {
+    text-align: center;
+    padding: 0 16px;
+  }
+
+  .step-num {
+    width: 80px; height: 80px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(176,0,255,0.15));
+    border: 1px solid rgba(0,229,255,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.8rem;
+    background-clip: text;
+    position: relative;
+  }
+
+  .step-num-inner {
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+
+  .step-desc { color: var(--gray); font-size: 0.9rem; }
+
+  /* ─── TESTIMONIALS ─── */
+  #testimonials { padding: 100px 0; background: linear-gradient(180deg, transparent, rgba(0,229,255,0.03), transparent); }
+
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .testimonial-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    backdrop-filter: blur(12px);
+    transition: border-color 0.3s;
+    position: relative;
+  }
+
+  .testimonial-card:hover { border-color: rgba(0,229,255,0.2); }
+
+  .stars {
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+
+  .testimonial-text {
+    font-size: 0.95rem;
+    color: var(--gray-light);
+    line-height: 1.75;
+    margin-bottom: 24px;
+    font-style: italic;
+  }
+
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .author-avatar {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--bg-primary);
+  }
+
+  .author-name { font-weight: 600; font-size: 0.9rem; }
+  .author-role { color: var(--gray); font-size: 0.8rem; }
+
+  /* ─── PRICING ─── */
+  #pricing { padding: 100px 0; }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .pricing-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px 32px;
+    backdrop-filter: blur(12px);
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pricing-card.featured {
+    border-color: rgba(0,229,255,0.4);
+    box-shadow: var(--glow-cyan);
+  }
+
+  .pricing-card.featured::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--cyan), var(--purple));
+  }
+
+  .pricing-card:hover:not(.featured) { transform: translateY(-4px); }
+
+  .featured-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--bg-primary);
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    padding: 4px 12px;
+    border-radius: 50px;
+    margin-bottom: 20px;
+  }
+
+  .pricing-plan {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: var(--gray-light);
+  }
+
+  .pricing-amount {
+    font-family: 'Syne', sans-serif;
+    font-size: 3.2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .pricing-amount .dollar { font-size: 1.8rem; vertical-align: super; }
+  .pricing-amount .period { font-size: 1rem; font-weight: 400; color: var(--gray); }
+
+  .pricing-desc { color: var(--gray); font-size: 0.85rem; margin-bottom: 28px; }
+
+  .pricing-features { list-style: none; margin-bottom: 32px; }
+  .pricing-features li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: var(--gray-light);
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pricing-features li:last-child { border-bottom: none; }
+
+  .check-icon {
+    width: 20px; height: 20px;
+    border-radius: 6px;
+    background: rgba(0,229,255,0.12);
+    border: 1px solid rgba(0,229,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    color: var(--cyan);
+    flex-shrink: 0;
+  }
+
+  .save-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--gold);
+    background: rgba(255,215,0,0.12);
+    border: 1px solid rgba(255,215,0,0.3);
+    padding: 4px 10px;
+    border-radius: 50px;
+    margin-left: 8px;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 80px 0 40px;
+    border-top: 1px solid var(--border);
+    position: relative;
+    z-index: 1;
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 60px;
+    margin-bottom: 60px;
+  }
+
+  .footer-brand .nav-logo { display: inline-block; margin-bottom: 16px; }
+  .footer-brand p { color: var(--gray); font-size: 0.9rem; max-width: 280px; line-height: 1.7; }
+
+  .footer-col h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray-light);
+    margin-bottom: 20px;
+  }
+
+  .footer-col ul { list-style: none; }
+  .footer-col ul li { margin-bottom: 12px; }
+  .footer-col ul a {
+    color: var(--gray);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s;
+  }
+  .footer-col ul a:hover { color: var(--cyan); }
+
+  .social-links {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .social-link {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: border-color 0.3s, background 0.3s;
+    cursor: pointer;
+  }
+
+  .social-link:hover {
+    border-color: var(--cyan);
+    background: rgba(0,229,255,0.08);
+  }
+
+  .footer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--gray);
+  }
+
+  .footer-cta-btn {
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    color: var(--bg-primary);
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    font-family: 'Syne', sans-serif;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.3s, transform 0.2s;
+  }
+
+  .footer-cta-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeSlideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  .float { animation: float 4s ease-in-out infinite; }
+
+  /* ─── SCROLL REVEAL ─── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ─── GRADIENT LINE DIVIDER ─── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), var(--purple), transparent);
+    opacity: 0.3;
+    margin: 0;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 768px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    .container { padding: 0 20px; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .steps-grid::before { display: none; }
+    .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+    .hero-h1 { font-size: 2.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">ScriptAI</div>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#portfolio">Samples</a></li>
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#testimonials">Reviews</a></li>
+    <li><a href="#contact" class="nav-cta">Get Free Sample</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-gradient"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span></span> AI-Powered Script Service • 100+ Scripts Delivered</div>
+    <h1 class="hero-h1">AI Scripts That<br><span class="gradient-text">Stop The Scroll</span></h1>
+    <p class="hero-sub">
+      <strong>6 viral scripts delivered to your inbox every month.</strong><br>
+      Finance · True Crime · Tech · Health · History
+    </p>
+    <div class="hero-buttons">
+      <a href="#contact" class="btn-primary">🎁 Get a Free Sample</a>
+      <a href="#pricing" class="btn-outline">View Pricing →</a>
+    </div>
+    <div class="trust-badges">
+      <div class="badge">
+        <div class="badge-icon">📦</div>
+        <span>100+ Scripts Delivered</span>
+      </div>
+      <div class="badge">
+        <div class="badge-icon">⭐</div>
+        <span>5-Star Rated</span>
+      </div>
+      <div class="badge">
+        <div class="badge-icon">🎬</div>
+        <span>Trusted by YouTubers</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">→ What We Offer</div>
+      <h2 class="section-h2">Pick Your Niche.<br>We Handle the Rest.</h2>
+      <p class="section-sub">Expertly crafted scripts engineered with viral hooks, retention loops, and proven storytelling structures.</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card reveal">
+        <span class="service-icon">💰</span>
+        <div class="service-title">Finance Scripts</div>
+        <div class="service-price">$50<span>/mo</span></div>
+        <button class="btn-select">Select Plan</button>
+      </div>
+      <div class="service-card reveal">
+        <span class="service-icon">🕵️</span>
+        <div class="service-title">True Crime Scripts</div>
+        <div class="service-price">$60<span>/mo</span></div>
+        <button class="btn-select">Select Plan</button>
+      </div>
+      <div class="service-card reveal">
+        <span class="service-icon">💻</span>
+        <div class="service-title">Tech Scripts</div>
+        <div class="service-price">$50<span>/mo</span></div>
+        <button class="btn-select">Select Plan</button>
+      </div>
+      <div class="service-card reveal">
+        <span class="service-icon">💪</span>
+        <div class="service-title">Health Scripts</div>
+        <div class="service-price">$40<span>/mo</span></div>
+        <button class="btn-select">Select Plan</button>
+      </div>
+      <div class="service-card reveal">
+        <span class="service-icon">📚</span>
+        <div class="service-title">History Scripts</div>
+        <div class="service-price">$40<span>/mo</span></div>
+        <button class="btn-select">Select Plan</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PORTFOLIO -->
+<section id="portfolio">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">→ Sample Scripts</div>
+      <h2 class="section-h2">See the Quality<br>Before You Commit</h2>
+      <p class="section-sub">Every script is built with a tested viral hook, structured narrative, and a strong CTA that drives subscribers.</p>
+    </div>
+    <div class="portfolio-grid">
+
+      <div class="script-card reveal">
+        <div class="script-header">
+          <div class="script-niche">💰 Finance</div>
+          <div class="viral-badge">⚡ Viral Hook</div>
+        </div>
+        <div class="script-body">
+          <div class="script-title">"The $50 Weekly Habit That Built a $500K Portfolio"</div>
+          <div class="script-preview">"Most people think investing is for the rich. They're wrong. Let me show you exactly how a 24-year-old barista turned $50 a week into half a million dollars..."</div>
+          <div class="script-meta">
+            <span>~8 min • 1,200 words</span>
+            <button class="btn-view" onclick="openModal('finance')">Read Full Script</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="script-card reveal">
+        <div class="script-header">
+          <div class="script-niche">🕵️ True Crime</div>
+          <div class="viral-badge">⚡ Viral Hook</div>
+        </div>
+        <div class="script-body">
+          <div class="script-title">"The Disappearance That Left an Entire Town Speechless"</div>
+          <div class="script-preview">"On a Tuesday morning in October, Karen left for her morning jog. She had her keys, her phone, and a smile. She never came back. But what investigators found three weeks later changed everything..."</div>
+          <div class="script-meta">
+            <span>~12 min • 1,800 words</span>
+            <button class="btn-view" onclick="openModal('crime')">Read Full Script</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="script-card reveal">
+        <div class="script-header">
+          <div class="script-niche">💻 Tech</div>
+          <div class="viral-badge">⚡ Viral Hook</div>
+        </div>
+        <div class="script-body">
+          <div class="script-title">"The AI Tool That Replaced My Entire $8K/Month Team"</div>
+          <div class="script-preview">"I ran a 6-person marketing agency. Then I spent one weekend testing AI tools — and fired myself. Here's the exact stack I use now to make more money working 4 hours a day..."</div>
+          <div class="script-meta">
+            <span>~10 min • 1,500 words</span>
+            <button class="btn-view" onclick="openModal('tech')">Read Full Script</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">→ Process</div>
+      <h2 class="section-h2">Up and Running<br>in 3 Simple Steps</h2>
+      <p class="section-sub">No onboarding calls. No complicated setups. Scripts hit your inbox automatically every month.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step reveal">
+        <div class="step-num"><span class="step-num-inner">01</span></div>
+        <h3 class="step-title">Choose Your Niche</h3>
+        <p class="step-desc">Pick from Finance, True Crime, Tech, Health, or History. Or bundle all 5 and save big.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num"><span class="step-num-inner">02</span></div>
+        <h3 class="step-title">We Deliver 6 Scripts / Month</h3>
+        <p class="step-desc">Our AI — refined with expert human review — crafts 6 fully structured, hook-driven scripts tailored to your niche.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num"><span class="step-num-inner">03</span></div>
+        <h3 class="step-title">You Create & Grow</h3>
+        <p class="step-desc">Record, upload, and watch your channel grow. No writer's block. No wasted hours. Just content that converts.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">→ Creator Reviews</div>
+      <h2 class="section-h2">YouTubers Love<br>ScriptAI</h2>
+    </div>
+    <div class="testimonials-grid">
+
+      <div class="testimonial-card reveal">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"These scripts saved me 10+ hours every single week. I used to spend my whole weekend writing — now I just film. My channel grew from 2K to 18K subscribers in 3 months."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">JR</div>
+          <div>
+            <div class="author-name">Jake R.</div>
+            <div class="author-role">Finance Creator • 18K Subscribers</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card reveal">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"My views literally doubled after switching to these hooks. I was skeptical at first but the first script I used went to 200K views. Now I don't touch a keyboard to write."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">SM</div>
+          <div>
+            <div class="author-name">Sarah M.</div>
+            <div class="author-role">True Crime YouTuber • 54K Subscribers</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card reveal">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"The Tech niche scripts are incredibly detailed and accurate. Honestly better than what I used to write myself. Worth every dollar — it pays for itself in AdSense within 2 videos."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">KL</div>
+          <div>
+            <div class="author-name">Kevin L.</div>
+            <div class="author-role">Tech Creator • 31K Subscribers</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">→ Pricing</div>
+      <h2 class="section-h2">Simple, Transparent<br>Pricing</h2>
+      <p class="section-sub">No contracts. Cancel anytime. Start with a free sample.</p>
+    </div>
+    <div class="pricing-grid">
+
+      <div class="pricing-card reveal">
+        <div class="pricing-plan">Monthly — Per Niche</div>
+        <div class="pricing-amount"><span class="dollar">$</span>50<span class="period">/mo</span></div>
+        <p class="pricing-desc">6 scripts/month for one niche of your choice.</p>
+        <ul class="pricing-features">
+          <li><div class="check-icon">✓</div> 6 fully scripted videos/mo</li>
+          <li><div class="check-icon">✓</div> Viral hook engineering</li>
+          <li><div class="check-icon">✓</div> Retention loop structure</li>
+          <li><div class="check-icon">✓</div> Delivered to your inbox</li>
+          <li><div class="check-icon">✓</div> Cancel anytime</li>
+        </ul>
+        <button class="btn-select" style="font-size:0.95rem; padding:14px;">Start 7-Day Trial</button>
+      </div>
+
+      <div class="pricing-card featured reveal">
+        <div class="featured-tag">⚡ Best Value</div>
+        <div class="pricing-plan">All 5 Niches Bundle</div>
+        <div class="pricing-amount"><span class="dollar">$</span>200<span class="period">/mo</span></div>
+        <p class="pricing-desc">All 5 niches. 30 scripts/month. <span class="save-badge">Save $40</span></p>
+        <ul class="pricing-features">
+          <li><div class="check-icon">✓</div> 30 scripts/mo across all niches</li>
+          <li><div class="check-icon">✓</div> Finance, Crime, Tech, Health & History</li>
+          <li><div class="check-icon">✓</div> Priority delivery</div></li>
+          <li><div class="check-icon">✓</div> Trend-reactive topics</li>
+          <li><div class="check-icon">✓</div> Cancel anytime</li>
+        </ul>
+        <button class="btn-primary" style="width:100%; padding:14px; font-size:0.95rem;">Get Your First Script Free</button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FOOTER -->
+<footer id="contact">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo">ScriptAI</div>
+        <p>AI-powered YouTube scripts that grow channels faster. 6 viral scripts. 1 monthly payment. Zero writer's block.</p>
+        <div class="social-links">
+          <div class="social-link">🐦</div>
+          <div class="social-link">📸</div>
+          <div class="social-link">▶️</div>
+          <div class="social-link">💼</div>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Niches</h4>
+        <ul>
+          <li><a href="#services">💰 Finance Scripts</a></li>
+          <li><a href="#services">🕵️ True Crime Scripts</a></li>
+          <li><a href="#services">💻 Tech Scripts</a></li>
+          <li><a href="#services">💪 Health Scripts</a></li>
+          <li><a href="#services">📚 History Scripts</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:hello@scriptai.io">📧 hello@scriptai.io</a></li>
+          <li><a href="#portfolio">Sample Scripts</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+        </ul>
+        <br>
+        <button class="footer-cta-btn" onclick="alert('Thanks! We\'ll send your free sample shortly.')">🎁 Free Sample Request</button>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 ScriptAI. All rights reserved.</span>
+      <span>Made for creators who want to grow faster 🚀</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ─── PARTICLES ───
+const canvas = document.getElementById('particles-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.size = Math.random() * 1.5 + 0.3;
+    this.speedX = (Math.random() - 0.5) * 0.3;
+    this.speedY = (Math.random() - 0.5) * 0.3;
+    this.opacity = Math.random() * 0.5 + 0.1;
+    this.color = Math.random() > 0.5 ? '#00e5ff' : '#b000ff';
+  }
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.globalAlpha = this.opacity;
+    ctx.fill();
+  }
+}
+
+for (let i = 0; i < 120; i++) particles.push(new Particle());
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.globalAlpha = 1;
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ─── SCROLL REVEAL ───
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.1 });
+reveals.forEach(el => observer.observe(el));
+
+// ─── MODAL DATA ───
+const scripts = {
+  finance: {
+    tag: '⚡ VIRAL HOOK — FINANCE',
+    title: '"The $50 Weekly Habit That Built a $500K Portfolio"',
+    content: `
+      <span class="hook">"Most people think investing is for the rich. They're wrong. Let me show you exactly how a 24-year-old barista turned $50 a week into half a million dollars — and why your bank doesn't want you to know this."</span>
+      <p>Welcome back to the channel. Today we're breaking down one of the most powerful wealth-building strategies that almost nobody talks about. It's not crypto. It's not NFTs. It's not some get-rich-quick scheme.</p>
+      <br>
+      <p>It's called dollar-cost averaging — and when combined with index funds and compound interest, it becomes a wealth machine that works 24 hours a day, even while you sleep.</p>
+      <br>
+      <p>Here's the math that blew my mind: If you invest just $50 every single week starting at age 25, and you get the average market return of about 10% per year, by the time you're 55... you'll have over $490,000 in your account.</p>
+      <br>
+      <p>That's not magic. That's compound interest — and it's why Warren Buffett called it the 8th wonder of the world. So let's break down exactly how to set this up in under 15 minutes today...</p>
+      <br>
+      <p>[CONTINUE WITH: Brokerage setup, index fund selection, automation tips, tax optimization, and CTA to subscribe for weekly finance videos]</p>
+    `
+  },
+  crime: {
+    tag: '⚡ VIRAL HOOK — TRUE CRIME',
+    title: '"The Disappearance That Left an Entire Town Speechless"',
+    content: `
+      <span class="hook">"On a Tuesday morning in October, Karen left for her morning jog. She had her keys, her phone, and a smile. She never came back. But what investigators found three weeks later changed everything — and no one in this town has been the same since."</span>
+      <p>This is a story about a woman who everyone loved. A school librarian. A mother of two. A person who remembered your birthday and always brought cookies to community meetings.</p>
+      <br>
+      <p>And it's a story about how one ordinary Tuesday morning unraveled 23 years of secrets buried in a quiet suburban neighborhood.</p>
+      <br>
+      <p>Karen had been missing for 72 hours before police took it seriously. She had no history of depression. No troubled relationships on record. Her husband was cooperative — almost too cooperative, investigators would later note.</p>
+      <br>
+      <p>The first real break came from a neighbor's doorbell camera. And what it captured would send shockwaves through an entire community...</p>
+      <br>
+      <p>[CONTINUE WITH: Investigation timeline, suspect profiles, evidence reveals, court proceedings, and resolution + CTA to subscribe for weekly true crime content]</p>
+    `
+  },
+  tech: {
+    tag: '⚡ VIRAL HOOK — TECH',
+    title: '"The AI Tool That Replaced My Entire $8K/Month Team"',
+    content: `
+      <span class="hook">"I ran a 6-person marketing agency. Then I spent one weekend testing AI tools — and fired myself. Here's the exact stack I use now to make more money working 4 hours a day. Don't show this to your employer."</span>
+      <p>Before we dive in, let me be real with you: 18 months ago I was burning $8,000 a month on salaries. Graphic designer. Copywriter. Social media manager. Video editor. SEO specialist. Project manager.</p>
+      <br>
+      <p>Today, I run the same workload — for myself and 4 clients — with a monthly AI tool spend of $287.</p>
+      <br>
+      <p>This isn't a sponsored video. Nobody paid me to say this. I'm going to show you my actual screen, my actual workflow, and the real numbers.</p>
+      <br>
+      <p>Tool number one replaced my entire content team. You've probably heard of it — but I guarantee you're not using it the way I'm about to show you. Let me pull up my screen...</p>
+      <br>
+      <p>[CONTINUE WITH: Tool-by-tool breakdown, live demos, cost comparisons, workflow automation diagrams, and CTA to download the free AI toolkit PDF]</p>
+    `
+  }
+};
+
+function openModal(type) {
+  const s = scripts[type];
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-tag">${s.tag}</div>
+    <div class="modal-title">${s.title}</div>
+    <div class="modal-script">${s.content}</div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) {
+    closeModalDirect();
+  }
+}
+
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModalDirect();
+});
+
+// ─── SELECT BUTTONS ───
+document.querySelectorAll('.btn-select').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const original = this.textContent;
+    this.textContent = '✓ Selected!';
+    this.style.background = 'rgba(0,229,255,0.2)';
+    setTimeout(() => {
+      this.textContent = original;
+      this.style.background = '';
+    }, 2000);
+  });
+});
+</script>
+</body>
+</html>
